@@ -65,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
     
-    // Validate phone number - exactly 10 digits
+    // Validate phone number - exactly 10 digit
     String phoneNumber = _phoneController.text.trim();
     if (phoneNumber.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(phoneNumber)) {
       ScaffoldMessenger.of(context).showSnackBar(
