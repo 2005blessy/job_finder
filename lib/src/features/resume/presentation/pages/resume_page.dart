@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/src/shared/user_profile.dart';
 
 class ResumePage extends StatefulWidget {
   const ResumePage({super.key});
@@ -9,111 +8,436 @@ class ResumePage extends StatefulWidget {
 }
 
 class _ResumePageState extends State<ResumePage> {
-  void _saveResume() {
-    // Only show message if backend confirms extraction
-    // TODO: Integrate with backend to extract skills and show message
+  bool _hasUploadedFile = false;
+  List<String> extractedSkills = [];
+  String uploadedFileName = '';
+
+  void _uploadResume() {
+    setState(() {
+      _hasUploadedFile = true;
+      uploadedFileName = 'resume_document.pdf'; // This will come from file picker
+      // Simulate skill extraction (this will be replaced with actual backend call)
+      extractedSkills = [
+        'Flutter',
+        'Dart',
+        'Mobile Development',
+        'UI/UX Design',
+        'Firebase',
+        'REST APIs',
+        'Git',
+        'Problem Solving'
+      ];
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.cloud_upload, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Resume uploaded successfully!'),
+          ],
+        ),
+        backgroundColor: Colors.green.shade400,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _removeResume() {
+    setState(() {
+      _hasUploadedFile = false;
+      uploadedFileName = '';
+      extractedSkills.clear();
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.delete, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Resume removed successfully!'),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade400,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text(
-          "Resume Upload",
+        title: Text(
+          'Upload Resume',
           style: TextStyle(
-            fontFamily: 'DMSerifDisplay',
+            fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
         elevation: 0,
-        shape: const Border(bottom: BorderSide(color: Colors.black, width: 2)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.home, color: Colors.black),
+            icon: Icon(Icons.home),
             onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-            tooltip: 'Home',
           ),
         ],
       ),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Card(
-            elevation: 10,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: const BorderSide(color: Colors.black12, width: 1.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(36),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(Icons.upload_file, size: 56, color: Colors.black87),
-                  const SizedBox(height: 18),
-                  Text(
-                    "Upload Your Resume",
-                    style: const TextStyle(
-                      fontFamily: 'DMSerifDisplay',
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isMobile = constraints.maxWidth < 600;
+          
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 600),
+                child: Column(
+                  children: [
+                    // Header Section
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Color(0xFF2563EB), width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.description,
+                            size: 48,
+                            color: Color(0xFF2563EB),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Upload Your Resume',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Upload your PDF resume to extract skills and enhance your profile',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "PDF format only. Your resume helps us recommend the best jobs for you.",
-                    style: const TextStyle(
-                      fontFamily: 'Manrope',
-                      fontSize: 16,
-                      color: Colors.black54,
+                    
+                    SizedBox(height: 24),
+                    
+                    // Resume Upload Section
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Color(0xFF2563EB), width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // Upload Area
+                          GestureDetector(
+                            onTap: _hasUploadedFile ? null : _uploadResume,
+                            child: Container(
+                              height: 180,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: _hasUploadedFile 
+                                      ? Colors.green 
+                                      : Color(0xFF2563EB).withOpacity(0.5),
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: _hasUploadedFile 
+                                    ? Colors.green.withOpacity(0.1) 
+                                    : Color(0xFF2563EB).withOpacity(0.05),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _hasUploadedFile 
+                                        ? Icons.check_circle_outline 
+                                        : Icons.cloud_upload_outlined,
+                                    size: 64,
+                                    color: _hasUploadedFile 
+                                        ? Colors.green 
+                                        : Color(0xFF2563EB),
+                                  ),
+                                  SizedBox(height: 16),
+                                  if (_hasUploadedFile) ...[
+                                    Text(
+                                      'Resume Uploaded Successfully!',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      uploadedFileName,
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    Text(
+                                      'Click to upload your resume',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2563EB),
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Supports PDF format only',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                          
+                          SizedBox(height: 24),
+                          
+                          // Action Buttons
+                          Row(
+                            children: [
+                              if (!_hasUploadedFile) ...[
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: _uploadResume,
+                                    icon: Icon(Icons.upload_file, size: 20),
+                                    label: Text('Choose PDF File'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF2563EB),
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: _uploadResume,
+                                    icon: Icon(Icons.refresh, size: 20),
+                                    label: Text('Upload New Resume'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF2563EB),
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                ElevatedButton.icon(
+                                  onPressed: _removeResume,
+                                  icon: Icon(Icons.delete, size: 20),
+                                  label: Text('Remove'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red.shade400,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black87,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                      shape: RoundedRectangleBorder(
+                    
+                    // Extracted Skills Section (only show if resume is uploaded)
+                    if (_hasUploadedFile && extractedSkills.isNotEmpty) ...[
+                      SizedBox(height: 24),
+                      
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Color(0xFF2563EB), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 15,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF2563EB).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.auto_awesome,
+                                    color: Color(0xFF2563EB),
+                                    size: 20,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Extracted Skills',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Skills automatically extracted from your resume:',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: extractedSkills.map((skill) => Container(
+                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF2563EB).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Color(0xFF2563EB).withOpacity(0.2)),
+                                ),
+                                child: Text(
+                                  skill,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    color: Color(0xFF2563EB),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              )).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    
+                    SizedBox(height: 32),
+                    
+                    // Information Note
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: Colors.black12, width: 1),
+                        border: Border.all(color: Colors.blue.shade200),
                       ),
-                      shadowColor: Colors.black12,
-                    ),
-                    icon: const Icon(Icons.upload, size: 20),
-                    label: const Text(
-                      "Choose PDF Resume",
-                      style: TextStyle(
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.blue.shade600,
+                            size: 24,
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Smart Resume Processing',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue.shade800,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Our AI will analyze your resume and automatically extract relevant skills to enhance your job matching.',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    onPressed: _saveResume,
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    "Your resume will be securely processed. Skills will be extracted after backend integration.",
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: Colors.black38,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

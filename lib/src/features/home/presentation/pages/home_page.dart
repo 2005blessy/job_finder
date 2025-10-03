@@ -11,311 +11,269 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Modern blue gradient background
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFe3f0fd), Color(0xFFb6d0ff), Color(0xFF90caf9)],
-                  stops: [0.0, 0.6, 1.0],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              // 🔹 Background Image - full screen with 0.7 opacity
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.7,
+                  child: Image.asset(
+                    "assets/images/dreamjob.jpg",
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey.shade200,
+                        child: Center(
+                          child: Text(
+                            'Background Image\nNot Found',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-              child: CustomPaint(
-                painter: _DotPatternPainter(),
-              ),
-            ),
-          ),
-          // Top horizontal header
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 72,
-              decoration: const BoxDecoration(
-                color: Color(0xFF1E3A8A),
-                boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black12)],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(Icons.work, color: Colors.white, size: 36),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Job Finder",
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 28,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
-                    ),
+
+              // 🔹 Top horizontal header
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: constraints.maxWidth < 600 ? 60 : 72, // Responsive header height
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(255, 21, 55, 149),
+                    boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black12)],
                   ),
-                ],
-              ),
-            ),
-          ),
-          // Main content
-          Padding(
-            padding: const EdgeInsets.only(top: 88, left: 32, right: 32, bottom: 32),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Dream Job box
-                  Card(
-                    elevation: 8,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    shadowColor: Colors.black.withOpacity(0.10),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Find Your Dream Job",
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Browse top jobs, apply instantly, and build your career with us.",
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 16,
-                              color: Color(0xFF4B5563),
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: 180,
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF2563EB),
-                                  foregroundColor: Colors.white,
-                                  elevation: 8,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ).copyWith(
-                                  overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                                    if (states.contains(MaterialState.hovered)) {
-                                      return Color(0xFF1E40AF);
-                                    }
-                                    return null;
-                                  }),
-                                ),
-                                onPressed: () => _navigate(context, '/jobs'),
-                                child: const Text(
-                                  "Explore Jobs",
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: constraints.maxWidth < 600 ? 16 : 32,
                   ),
-                  const SizedBox(width: 40),
-                  // Profile Summary box
-                  Container(
-                    width: 320,
-                    child: Card(
-                      elevation: 8,
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.work,
+                        color: Colors.white,
+                        size: constraints.maxWidth < 600 ? 28 : 36,
                       ),
-                      shadowColor: Colors.black.withOpacity(0.10),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Profile Summary",
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              "Name: "+UserProfile.name,
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Skills: Flutter, Dart",
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            SizedBox(
-                              width: double.infinity,
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF2563EB),
-                                    foregroundColor: Colors.white,
-                                    elevation: 8,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                  ).copyWith(
-                                    overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                                      if (states.contains(MaterialState.hovered)) {
-                                        return Color(0xFF1E40AF);
-                                      }
-                                      return null;
-                                    }),
-                                  ),
-                                  onPressed: () => _navigate(context, '/profile'),
-                                  child: const Text(
-                                    "Profile",
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF2563EB),
-                                    foregroundColor: Colors.white,
-                                    elevation: 8,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                  ).copyWith(
-                                    overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                                      if (states.contains(MaterialState.hovered)) {
-                                        return Color(0xFF1E40AF);
-                                      }
-                                      return null;
-                                    }),
-                                  ),
-                                  onPressed: () => _navigate(context, '/resume'),
-                                  child: const Text(
-                                    "Resume",
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF2563EB),
-                                    foregroundColor: Colors.white,
-                                    elevation: 8,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                  ).copyWith(
-                                    overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                                      if (states.contains(MaterialState.hovered)) {
-                                        return Color(0xFF1E40AF);
-                                      }
-                                      return null;
-                                    }),
-                                  ),
-                                  onPressed: () => _navigate(context, '/courses'),
-                                  child: const Text(
-                                    "Courses",
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                      const SizedBox(width: 12),
+                      Text(
+                        "Job Finder",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: constraints.maxWidth < 600 ? 20 : 28,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
+
+              // 🔹 Job Card - Top Left Corner
+              Positioned(
+                top: constraints.maxWidth < 600 ? 80 : 100,
+                left: constraints.maxWidth < 600 ? 16 : 32,
+                child: _buildJobCard(context, constraints),
+              ),
+
+              // 🔹 Profile Card - Bottom Right Corner
+              Positioned(
+                bottom: constraints.maxWidth < 600 ? 40 : 60,
+                right: constraints.maxWidth < 600 ? 16 : 32,
+                child: _buildProfileCard(context, constraints),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-}
 
-class _DotPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFB6C2D1).withOpacity(0.13)
-      ..style = PaintingStyle.fill;
-    const double spacing = 32;
-    const double radius = 2.5;
-    for (double y = 0; y < size.height; y += spacing) {
-      for (double x = 0; x < size.width; x += spacing) {
-        canvas.drawCircle(Offset(x, y), radius, paint);
-      }
+  Widget _buildResponsiveLayout(BuildContext context, BoxConstraints constraints) {
+    bool isNarrow = constraints.maxWidth < 800;
+    bool isVeryNarrow = constraints.maxWidth < 600;
+    
+    if (isNarrow) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildJobCard(context, constraints),
+          SizedBox(height: isVeryNarrow ? 20 : 30),
+          _buildProfileCard(context, constraints),
+        ],
+      );
+    } else {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Flexible(child: _buildJobCard(context, constraints)),
+          const SizedBox(width: 40),
+          Flexible(child: _buildProfileCard(context, constraints)),
+        ],
+      );
     }
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget _buildJobCard(BuildContext context, BoxConstraints constraints) {
+    bool isVeryNarrow = constraints.maxWidth < 600;
+    
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: isVeryNarrow ? constraints.maxWidth * 0.95 : 450,
+      ),
+      child: Card(
+        elevation: 12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shadowColor: Colors.black.withOpacity(0.3),
+        color: Colors.white.withOpacity(0.90),
+        child: Padding(
+          padding: EdgeInsets.all(isVeryNarrow ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Find Your Dream Job",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: isVeryNarrow ? 22 : 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              SizedBox(height: isVeryNarrow ? 8 : 10),
+              Text(
+                "Browse top jobs, apply instantly, and build your career with us.",
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: isVeryNarrow ? 13 : 15,
+                  color: Color.fromARGB(255, 69, 79, 95),
+                ),
+              ),
+              SizedBox(height: isVeryNarrow ? 20 : 30),
+              SizedBox(
+                width: isVeryNarrow ? 140 : 160,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    elevation: 8,
+                    padding: EdgeInsets.symmetric(
+                      vertical: isVeryNarrow ? 12 : 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () => _navigate(context, '/jobs'),
+                  child: Text(
+                    "Explore Jobs",
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: isVeryNarrow ? 14 : 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(BuildContext context, BoxConstraints constraints) {
+    bool isVeryNarrow = constraints.maxWidth < 600;
+    
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: isVeryNarrow ? constraints.maxWidth * 0.95 : 400,
+      ),
+      child: Card(
+        elevation: 12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shadowColor: Colors.black.withOpacity(0.3),
+        color: Colors.white.withOpacity(0.90),
+        child: Padding(
+          padding: EdgeInsets.all(isVeryNarrow ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Profile Summary",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: isVeryNarrow ? 20 : 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: isVeryNarrow ? 8 : 10),
+              Text(
+                "Name: ${UserProfile.name}",
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: isVeryNarrow ? 13 : 15,
+                ),
+              ),
+              SizedBox(height: isVeryNarrow ? 4 : 6),
+              Text(
+                "Skills: Flutter, Dart",
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: isVeryNarrow ? 13 : 15,
+                ),
+              ),
+              SizedBox(height: isVeryNarrow ? 16 : 20),
+              _buildProfileButton(context, "Profile", '/profile', isVeryNarrow),
+              SizedBox(height: isVeryNarrow ? 8 : 10),
+              _buildProfileButton(context, "Resume", '/resume', isVeryNarrow),
+              SizedBox(height: isVeryNarrow ? 8 : 10),
+              _buildProfileButton(context, "Courses", '/courses', isVeryNarrow),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileButton(BuildContext context, String text, String route, bool isVeryNarrow) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2563EB),
+          foregroundColor: Colors.white,
+          elevation: 8,
+          padding: EdgeInsets.symmetric(
+            vertical: isVeryNarrow ? 8 : 10,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        onPressed: () => _navigate(context, route),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            fontSize: isVeryNarrow ? 14 : 16,
+          ),
+        ),
+      ),
+    );
+  }
 }
