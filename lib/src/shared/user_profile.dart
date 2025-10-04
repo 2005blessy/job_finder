@@ -2,7 +2,7 @@ class UserProfile {
   static String name = '';
   static String email = '';
   static String phone = '';
-  static String location = '';
+  static String dateOfBirth = '';
   static bool resumeUploaded = false;
   
   // New fields for skill-based recommendations

@@ -15,12 +15,42 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _fullName = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _dateOfBirthController = TextEditingController();
 
   String? _createdEmail;
   String? _createdPassword;
   bool _isHovering = false;
 
   void _toggle() => setState(() => isLogin = !isLogin);
+
+  Future<void> _selectDateOfBirth() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(Duration(days: 365 * 20)), // Default to 20 years ago
+      firstDate: DateTime.now().subtract(Duration(days: 365 * 100)), // 100 years ago
+      lastDate: DateTime.now(), // Can't pick future dates
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF2563eb),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    
+    if (picked != null) {
+      setState(() {
+        _dateOfBirthController.text = "${picked.day}/${picked.month}/${picked.year}";
+      });
+    }
+  }
 
   void _submit() {
     final email = _email.text.trim();
@@ -50,22 +80,44 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       final fullName = _fullName.text.trim();
+      final phone = _phoneController.text.trim();
+      final dateOfBirth = _dateOfBirthController.text.trim();
+      
+      // Validation for signup fields
       if (fullName.isEmpty) {
         _showError('Please enter your full name.');
         return;
       }
+      if (phone.isEmpty) {
+        _showError('Please enter your phone number.');
+        return;
+      }
+      if (phone.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+        _showError('Phone number should contain exactly 10 digits.');
+        return;
+      }
+      if (dateOfBirth.isEmpty) {
+        _showError('Please select your date of birth.');
+        return;
+      }
+      
       setState(() {
         _createdEmail = email;
         _createdPassword = password;
       });
-      // Set user profile info on sign up
+      
+      // Set user profile info on sign up - complete profile automatically
       UserProfile.email = email;
       UserProfile.name = fullName;
+      UserProfile.phone = phone;
+      UserProfile.dateOfBirth = dateOfBirth;
       Navigator.pushReplacementNamed(context, '/home');
     }
     _email.clear();
     _password.clear();
     _fullName.clear();
+    _phoneController.clear();
+    _dateOfBirthController.clear();
   }
 
   void _showError(String msg) {
@@ -179,7 +231,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Job Finder Title with gradient
+                              // CareerLink Title with gradient
                               ShaderMask(
                                 shaderCallback: (bounds) => const LinearGradient(
                                   colors: [Color(0xFF2563eb), Color(0xFF7c3aed)],
@@ -187,7 +239,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                                   end: Alignment.bottomRight,
                                 ).createShader(bounds),
                                 child: Text(
-                                  'Job Finder',
+                                  'CareerLink',
                                   style: TextStyle(
                                     fontSize: titleFontSize,
                                     fontWeight: FontWeight.w800,
@@ -200,6 +252,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                               
                               // Form fields
                               if (!isLogin) ...[
+                                // Full Name field
                                 TextField(
                                   controller: _fullName,
                                   style: TextStyle(fontSize: inputFontSize),
@@ -221,7 +274,68 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                                   ),
                                 ),
                                 SizedBox(height: verticalPadding * 0.4),
+                                
+                                // Phone Number field
+                                TextField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  maxLength: 10,
+                                  style: TextStyle(fontSize: inputFontSize),
+                                  decoration: InputDecoration(
+                                    labelText: 'Phone Number (10 digits)',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Color(0xFF2563eb), width: 2),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Color(0xFF2563eb), width: 2),
+                                    ),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                    counterText: '', // Hide character counter
+                                  ),
+                                ),
+                                SizedBox(height: verticalPadding * 0.4),
+                                
+                                // Date of Birth field with date picker
+                                GestureDetector(
+                                  onTap: _selectDateOfBirth,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.grey.shade400, width: 1),
+                                    ),
+                                    child: TextField(
+                                      controller: _dateOfBirthController,
+                                      enabled: false, // Disable text input, only date picker
+                                      style: TextStyle(fontSize: inputFontSize),
+                                      decoration: InputDecoration(
+                                        labelText: 'Date of Birth',
+                                        hintText: 'Tap to select date',
+                                        suffixIcon: Icon(
+                                          Icons.calendar_today,
+                                          color: Color(0xFF2563eb),
+                                        ),
+                                        border: InputBorder.none,
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        disabledBorder: InputBorder.none,
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                        labelStyle: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: verticalPadding * 0.4),
                               ],
+                              
+                              // Email field
                               TextField(
                                 controller: _email,
                                 style: TextStyle(fontSize: inputFontSize),
@@ -243,6 +357,8 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                                 ),
                               ),
                               SizedBox(height: verticalPadding * 0.4),
+                              
+                              // Password field
                               TextField(
                                 controller: _password,
                                 obscureText: true,

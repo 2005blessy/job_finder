@@ -1,147 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/src/shared/user_profile.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _occupationController = TextEditingController();
-  
-  bool _isEditing = true; // Start with editing enabled
-
-  @override
-  void initState() {
-    super.initState();
-    // Auto-fill name and email from UserProfile
-    _nameController.text = UserProfile.name;
-    _emailController.text = UserProfile.email;
-    _phoneController.text = UserProfile.phone ?? '';
-    _locationController.text = UserProfile.location ?? '';
-    _ageController.text = '';
-    _occupationController.text = '';
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _locationController.dispose();
-    _ageController.dispose();
-    _occupationController.dispose();
-    super.dispose();
-  }
-
-  void _toggleEdit() {
-    setState(() {
-      _isEditing = !_isEditing;
-    });
-  }
-
-  void _saveProfile() {
-    // Check mandatory fields
-    if (_nameController.text.trim().isEmpty || 
-        _emailController.text.trim().isEmpty ||
-        _phoneController.text.trim().isEmpty || 
-        _locationController.text.trim().isEmpty ||
-        _ageController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please fill in all mandatory fields!'),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      return;
-    }
-    
-    // Validate phone number - exactly 10 digit
-    String phoneNumber = _phoneController.text.trim();
-    if (phoneNumber.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(phoneNumber)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Phone number should contain exactly 10 numbers!'),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      return;
-    }
-    
-    setState(() {
-      UserProfile.name = _nameController.text.trim();
-      UserProfile.email = _emailController.text.trim();
-      UserProfile.phone = _phoneController.text.trim();
-      UserProfile.location = _locationController.text.trim();
-      _isEditing = false; // Auto-disable editing after saving
-    });
-    
-    // Show success dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 12),
-              Text(
-                'Success!',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            'Profile details are saved successfully!',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                Navigator.pushReplacementNamed(context, '/home'); // Navigate to home
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF2563EB),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(
           'Profile',
@@ -151,251 +17,334 @@ class _ProfilePageState extends State<ProfilePage> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
+        backgroundColor: Color(0xFF2563EB),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.close : Icons.edit),
-            onPressed: _toggleEdit,
-          ),
-          IconButton(
-            icon: Icon(Icons.home),
-            onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-          ),
-        ],
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isMobile = constraints.maxWidth < 600;
           
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(isMobile ? 16 : 24),
-            child: Center(
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 600),
-                child: Column(
-                  children: [
-                    // Profile Header Card
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(isMobile ? 20 : 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Color(0xFF2563EB), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // Profile Avatar
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Color(0xFF2563EB), width: 3),
-                            ),
-                            child: CircleAvatar(
-                              radius: isMobile ? 40 : 50,
-                              backgroundColor: Color(0xFF2563EB).withOpacity(0.1),
-                              child: Icon(
-                                Icons.person,
-                                size: isMobile ? 40 : 50,
-                                color: Color(0xFF2563EB),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            _nameController.text.isNotEmpty ? _nameController.text : 'Your Name',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: isMobile ? 20 : 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            _emailController.text.isNotEmpty ? _emailController.text : 'your.email@gmail.com',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: isMobile ? 14 : 16,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isMobile ? 16 : 24),
+              child: Column(
+                children: [
+                  // Profile Header Card
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(isMobile ? 20 : 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFF2563EB), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF2563EB).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    
-                    SizedBox(height: 24),
-                    
-                    // Combined Personal Details Card
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(isMobile ? 20 : 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Color(0xFF2563EB), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 15,
-                            offset: Offset(0, 5),
+                    child: Row(
+                      children: [
+                        // Profile Avatar
+                        Container(
+                          width: isMobile ? 70 : 80,
+                          height: isMobile ? 70 : 80,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF2563EB), Color(0xFF1e40af)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF2563EB).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: isMobile ? 35 : 40,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        
+                        // Profile Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.person_outline, color: Color(0xFF2563EB), size: 24),
-                              SizedBox(width: 8),
                               Text(
-                                'Personal Details',
+                                UserProfile.name.isNotEmpty ? UserProfile.name : 'Your Name',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
-                                  fontSize: isMobile ? 18 : 20,
+                                  fontSize: isMobile ? 20 : 24,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black87,
                                 ),
                               ),
-                            ],
-                          ),
-                          SizedBox(height: 20),
-                          
-                          // Name Field (Mandatory)
-                          _buildInputField(
-                            'Full Name *',
-                            _nameController,
-                            Icons.person,
-                            enabled: _isEditing,
-                          ),
-                          SizedBox(height: 16),
-                          
-                          // Email Field (Mandatory)
-                          _buildInputField(
-                            'Email Address *',
-                            _emailController,
-                            Icons.email,
-                            enabled: _isEditing,
-                          ),
-                          SizedBox(height: 16),
-                          
-                          // Phone Field (Mandatory) - with 10 digit validation
-                          _buildInputField(
-                            'Phone Number * (10 digits)',
-                            _phoneController,
-                            Icons.phone,
-                            enabled: _isEditing,
-                            keyboardType: TextInputType.phone,
-                            maxLength: 10, // Limit to 10 characters
-                          ),
-                          SizedBox(height: 16),
-                          
-                          // Location Field (Mandatory)
-                          _buildInputField(
-                            'Location *',
-                            _locationController,
-                            Icons.location_on,
-                            enabled: _isEditing,
-                          ),
-                          SizedBox(height: 16),
-                          
-                          // Age Field (Mandatory)
-                          _buildInputField(
-                            'Age *',
-                            _ageController,
-                            Icons.cake,
-                            enabled: _isEditing,
-                            keyboardType: TextInputType.number,
-                          ),
-                          SizedBox(height: 16),
-                          
-                          // Occupation Field (Optional)
-                          _buildInputField(
-                            'Occupation (Optional)',
-                            _occupationController,
-                            Icons.work,
-                            enabled: _isEditing,
-                          ),
-                          
-                          SizedBox(height: 16),
-                          
-                          // Field info note
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline, size: 16, color: Colors.grey.shade600),
-                              SizedBox(width: 8),
+                              SizedBox(height: 4),
                               Text(
-                                '* Required fields',
+                                UserProfile.email.isNotEmpty ? UserProfile.email : 'your.email@gmail.com',
                                 style: TextStyle(
                                   fontFamily: 'Inter',
-                                  fontSize: 12,
+                                  fontSize: isMobile ? 14 : 16,
                                   color: Colors.grey.shade600,
-                                  fontStyle: FontStyle.italic,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    
-                    SizedBox(height: 32),
-                    
-                    // Save Button (when editing)
-                    if (_isEditing)
-                      Container(
-                        width: double.infinity,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Color(0xFF2563EB), width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF2563EB).withOpacity(0.2),
-                              blurRadius: 15,
-                              offset: Offset(0, 5),
+                  ),
+                  
+                  SizedBox(height: 24),
+                  
+                  // Personal Details Card - Read Only
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(isMobile ? 20 : 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFF2563EB), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF2563EB).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              color: Color(0xFF2563EB),
+                              size: 24,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Personal Information',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: isMobile ? 18 : 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
                           ],
                         ),
-                        child: ElevatedButton(
-                          onPressed: _saveProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2563EB),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                        SizedBox(height: 20),
+                        
+                        // Name Field
+                        _buildReadOnlyField(
+                          icon: Icons.account_circle_outlined,
+                          label: 'Full Name',
+                          value: UserProfile.name.isNotEmpty ? UserProfile.name : 'Not provided',
+                          isMobile: isMobile,
+                        ),
+                        SizedBox(height: 16),
+                        
+                        // Email Field
+                        _buildReadOnlyField(
+                          icon: Icons.email_outlined,
+                          label: 'Email',
+                          value: UserProfile.email.isNotEmpty ? UserProfile.email : 'Not provided',
+                          isMobile: isMobile,
+                        ),
+                        SizedBox(height: 16),
+                        
+                        // Phone Field
+                        _buildReadOnlyField(
+                          icon: Icons.phone_outlined,
+                          label: 'Phone Number',
+                          value: UserProfile.phone.isNotEmpty ? UserProfile.phone : 'Not provided',
+                          isMobile: isMobile,
+                        ),
+                        SizedBox(height: 16),
+                        
+                        // Date of Birth Field
+                        _buildReadOnlyField(
+                          icon: Icons.cake_outlined,
+                          label: 'Date of Birth',
+                          value: UserProfile.dateOfBirth.isNotEmpty ? UserProfile.dateOfBirth : 'Not provided',
+                          isMobile: isMobile,
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: 24),
+                  
+                  // Profile Completion Card
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(isMobile ? 20 : 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFF2563EB), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF2563EB).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.analytics_outlined,
+                              color: Color(0xFF2563EB),
+                              size: 24,
                             ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.save, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                'Save Profile',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Profile Completion',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: isMobile ? 18 : 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        
+                        // Progress indicator
+                        Row(
+                          children: [
+                            Expanded(
+                              child: LinearProgressIndicator(
+                                value: _getProfileCompletionPercentage(),
+                                backgroundColor: Colors.grey.shade200,
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                                minHeight: 8,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              '${(_getProfileCompletionPercentage() * 100).round()}%',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12),
+                        
+                        Text(
+                          _getProfileCompletionMessage(),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
                         ),
-                      ),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: 24),
+                  
+                  // Quick Actions
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(isMobile ? 20 : 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFF2563EB), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF2563EB).withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.bolt_outlined,
+                              color: Color(0xFF2563EB),
+                              size: 24,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Quick Actions',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: isMobile ? 18 : 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 20),
+                        
+                        // Action buttons
+                        _buildActionButton(
+                          context: context,
+                          icon: Icons.work_outline,
+                          title: 'Explore Jobs',
+                          subtitle: 'Find your dream job',
+                          onTap: () => Navigator.pushNamed(context, '/jobs'),
+                          isMobile: isMobile,
+                        ),
+                        SizedBox(height: 12),
+                        
+                        _buildActionButton(
+                          context: context,
+                          icon: Icons.school_outlined,
+                          title: 'View Courses',
+                          subtitle: 'Enhance your skills',
+                          onTap: () => Navigator.pushNamed(context, '/courses'),
+                          isMobile: isMobile,
+                        ),
+                        SizedBox(height: 12),
+                        
+                        _buildActionButton(
+                          context: context,
+                          icon: Icons.assignment_outlined,
+                          title: 'Applied Jobs',
+                          subtitle: 'Track your applications',
+                          onTap: () => Navigator.pushNamed(context, '/applied-jobs'),
+                          isMobile: isMobile,
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: isMobile ? 80 : 40),
+                ],
               ),
             ),
           );
@@ -404,52 +353,150 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInputField(
-    String label,
-    TextEditingController controller,
-    IconData icon, {
-    bool enabled = true,
-    TextInputType? keyboardType,
-    int? maxLength,
+  Widget _buildReadOnlyField({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isMobile,
   }) {
     return Container(
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: enabled ? Color(0xFF2563EB).withOpacity(0.3) : Colors.grey.shade300,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: TextField(
-        controller: controller,
-        enabled: enabled,
-        keyboardType: keyboardType,
-        maxLength: maxLength,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(
+      child: Row(
+        children: [
+          Icon(
             icon,
-            color: enabled ? Color(0xFF2563EB) : Colors.grey.shade400,
+            color: Color(0xFF2563EB),
+            size: 20,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          disabledBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          filled: true,
-          fillColor: enabled ? Colors.white : Colors.grey.shade50,
-          labelStyle: TextStyle(
-            color: enabled ? Color(0xFF2563EB) : Colors.grey.shade500,
-            fontFamily: 'Inter',
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: isMobile ? 14 : 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
           ),
-          counterText: '', // Hide the character counter
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    required bool isMobile,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
         ),
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 16,
-          color: enabled ? Colors.black87 : Colors.grey.shade600,
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Color(0xFF2563EB).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: Color(0xFF2563EB),
+                size: 20,
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: isMobile ? 14 : 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: Colors.grey.shade400,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  double _getProfileCompletionPercentage() {
+    int filledFields = 0;
+    int totalFields = 4; // name, email, phone, dateOfBirth
+    
+    if (UserProfile.name.isNotEmpty) filledFields++;
+    if (UserProfile.email.isNotEmpty) filledFields++;
+    if (UserProfile.phone.isNotEmpty) filledFields++;
+    if (UserProfile.dateOfBirth.isNotEmpty) filledFields++;
+    
+    return filledFields / totalFields;
+  }
+
+  String _getProfileCompletionMessage() {
+    double percentage = _getProfileCompletionPercentage();
+    if (percentage == 1.0) {
+      return 'Your profile is complete! You\'re ready to explore all features.';
+    } else if (percentage >= 0.75) {
+      return 'Almost there! Just a few more details to complete your profile.';
+    } else if (percentage >= 0.5) {
+      return 'You\'re halfway done. Keep going to unlock all features.';
+    } else {
+      return 'Complete your profile to get personalized job recommendations.';
+    }
   }
 }

@@ -1,8 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_finder/src/shared/user_profile.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    _configureStatusBar();
+  }
+
+  void _configureStatusBar() {
+    // Configure status bar appearance
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Color(0xFF2563EB), // Match header color
+        statusBarIconBrightness: Brightness.light, // Light icons for dark header
+        statusBarBrightness: Brightness.dark, // For iOS
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+  }
 
   void _navigate(BuildContext context, String route) {
     Navigator.pushNamed(context, route);
@@ -10,91 +35,117 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
-            children: [
-              // 🔹 Background Image - full screen with 0.7 opacity
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.7,
-                  child: Image.asset(
-                    "assets/images/dreamjob.jpg",
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey.shade200,
-                        child: Center(
-                          child: Text(
-                            'Background Image\nNot Found',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
+    return SafeArea(
+      top: false, // We'll handle top safe area manually for the header
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            // Get the actual safe area padding
+            final safePadding = MediaQuery.of(context).padding;
+            
+            return Stack(
+              children: [
+                // 🔹 Background Image - full screen with 0.7 opacity
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: 0.7,
+                    child: Image.asset(
+                      "assets/images/dreamjob.jpg",
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade200,
+                          child: Center(
+                            child: Text(
+                              'Background Image\nNot Found',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
 
-              // 🔹 Top horizontal header
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: constraints.maxWidth < 600 ? 60 : 72, // Responsive header height
-                  decoration: const BoxDecoration(
-                    color: Color.fromARGB(255, 21, 55, 149),
-                    boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black12)],
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: constraints.maxWidth < 600 ? 16 : 32,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.work,
-                        color: Colors.white,
-                        size: constraints.maxWidth < 600 ? 28 : 36,
+                // 🔹 Top horizontal header with improved styling
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    // Add top padding for status bar
+                    padding: EdgeInsets.only(top: safePadding.top),
+                    decoration: BoxDecoration(
+                      // Use consistent blue color
+                      color: const Color(0xFF2563EB),
+                      // Subtle gradient for better appearance
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          const Color(0xFF2563EB),
+                          const Color(0xFF2563EB).withOpacity(0.95),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Job Finder",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                          fontSize: constraints.maxWidth < 600 ? 20 : 28,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                        ),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 8,
+                          color: Colors.black.withOpacity(0.15),
+                          offset: Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Container(
+                      height: constraints.maxWidth < 600 ? 56 : 64, // Slightly reduced height
+                      padding: EdgeInsets.symmetric(
+                        horizontal: constraints.maxWidth < 600 ? 16 : 32,
                       ),
-                    ],
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.work,
+                            color: Colors.white,
+                            size: constraints.maxWidth < 600 ? 26 : 32, // Slightly smaller icon
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Job Finder",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600, // Slightly less bold
+                              fontSize: constraints.maxWidth < 600 ? 18 : 24, // Reduced font size
+                              color: Colors.white,
+                              letterSpacing: 0.8, // Reduced letter spacing
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
 
-              // 🔹 Job Card - Top Left Corner
-              Positioned(
-                top: constraints.maxWidth < 600 ? 80 : 100,
-                left: constraints.maxWidth < 600 ? 16 : 32,
-                child: _buildJobCard(context, constraints),
-              ),
+                // 🔹 Job Card - Top Left Corner (adjusted for reduced header)
+                Positioned(
+                  top: (constraints.maxWidth < 600 ? 72 : 84) + safePadding.top, // Adjusted for smaller header
+                  left: constraints.maxWidth < 600 ? 16 : 32,
+                  child: _buildJobCard(context, constraints),
+                ),
 
-              // 🔹 Profile Card - Bottom Right Corner
-              Positioned(
-                bottom: constraints.maxWidth < 600 ? 40 : 60,
-                right: constraints.maxWidth < 600 ? 16 : 32,
-                child: _buildProfileCard(context, constraints),
-              ),
-            ],
-          );
-        },
+                // 🔹 Profile Card - Bottom Right Corner (adjusted for safe area)
+                Positioned(
+                  bottom: (constraints.maxWidth < 600 ? 40 : 60) + safePadding.bottom,
+                  right: constraints.maxWidth < 600 ? 16 : 32,
+                  child: _buildProfileCard(context, constraints),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
