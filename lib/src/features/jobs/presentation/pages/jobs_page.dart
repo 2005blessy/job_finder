@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/src/shared/user_profile.dart';
 
 class JobsPage extends StatefulWidget {
   const JobsPage({super.key});
@@ -589,20 +590,38 @@ class _JobsPageState extends State<JobsPage> {
                 style: TextStyle(color: Colors.grey.shade600),
               ),
             ),
+            if (!UserProfile.hasAppliedToJob(job)) ...[
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _markAsApplied(job);
+                },
+                icon: Icon(Icons.check_circle_outline, size: 18),
+                label: Text('Mark as Applied'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+            ],
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 // Handle apply for job
-                _applyForJob(job);
+                _redirectToJobApplication(job);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF2563EB),
+                backgroundColor: UserProfile.hasAppliedToJob(job) ? Colors.grey : Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text('Apply Now'),
+              child: Text(UserProfile.hasAppliedToJob(job) ? 'Already Applied' : 'Apply Now'),
             ),
           ],
         );
@@ -638,6 +657,39 @@ class _JobsPageState extends State<JobsPage> {
           ],
         ),
         backgroundColor: Color(0xFF2563EB),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _redirectToJobApplication(Map<String, dynamic> job) {
+    // This will be handled by backend - redirect to job application page
+    Navigator.pushNamed(
+      context, 
+      '/job-application',
+      arguments: {
+        'jobId': job['title'], // or job['id'] if available
+        'jobTitle': job['title'],
+        'company': job['company'],
+      },
+    );
+  }
+
+  void _markAsApplied(Map<String, dynamic> job) {
+    UserProfile.addAppliedJob(job);
+    setState(() {}); // Refresh the UI to show updated status
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Job marked as applied!'),
+          ],
+        ),
+        backgroundColor: Colors.green.shade400,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),

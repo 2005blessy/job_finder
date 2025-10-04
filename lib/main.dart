@@ -9,8 +9,20 @@ import 'src/features/resume/presentation/pages/resume_page.dart';
 import 'src/features/courses/presentation/pages/courses_page.dart';
 import 'src/features/recommendations/presentation/pages/job_recommendations_page.dart';
 import 'src/features/recommendations/presentation/pages/course_recommendations_page.dart';
+import 'src/features/applied_jobs/presentation/pages/applied_jobs_page.dart';
+import 'src/core/services/api_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Check backend connectivity
+  final apiService = ApiService();
+  final isBackendAvailable = await apiService.checkHealth();
+  
+  if (!isBackendAvailable) {
+    print('Warning: Backend is not available. Some features may not work.');
+  }
+  
   runApp(const JobFinderApp());
 }
 
@@ -45,6 +57,58 @@ class JobFinderApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (context) => CourseRecommendationsPage(missingSkills: args ?? []),
             );
+          case '/course-details':
+            return MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(
+                  title: Text('Course Details'),
+                  backgroundColor: Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                ),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.school, size: 64, color: Color(0xFF2563EB)),
+                      SizedBox(height: 16),
+                      Text(
+                        'Course Details Page',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      Text('Backend will handle course enrollment here'),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          case '/job-application':
+            return MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(
+                  title: Text('Job Application'),
+                  backgroundColor: Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                ),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.work, size: 64, color: Color(0xFF2563EB)),
+                      SizedBox(height: 16),
+                      Text(
+                        'Job Application Page',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      Text('Backend will handle job application here'),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          case '/applied-jobs':
+            return MaterialPageRoute(builder: (context) => const AppliedJobsPage());
           default:
             return MaterialPageRoute(
               builder: (context) => Scaffold(

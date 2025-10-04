@@ -11,20 +11,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:job_finder/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App loads login page test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const JobFinderApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that the login page loads
+    expect(find.text('Welcome to CareerLink'), findsOneWidget);
+    expect(find.text('Login'), findsWidgets);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Navigation test', (WidgetTester tester) async {
+    await tester.pumpWidget(const JobFinderApp());
+    
+    // Test basic app functionality
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

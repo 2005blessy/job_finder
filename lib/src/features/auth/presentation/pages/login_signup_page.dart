@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:job_finder/src/core/services/api_service.dart';
 import 'package:job_finder/src/shared/user_profile.dart';
 
 class LoginSignUpPage extends StatefulWidget {
@@ -52,10 +53,11 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     final email = _email.text.trim();
     final password = _password.text.trim();
     final isGmail = email.endsWith('@gmail.com');
+    
     if (!isGmail) {
       _showError('Please enter a valid Gmail address (must end with @gmail.com).');
       return;
@@ -64,55 +66,72 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
       _showError('Please enter your password.');
       return;
     }
-    if (isLogin) {
-      if (_createdEmail == null || _createdPassword == null) {
-        _showError('No account found. Please sign up first.');
-        return;
-      }
-      if (email != _createdEmail || password != _createdPassword) {
-        _showError('Invalid credentials.');
-        return;
-      }
-      // Set user profile info on login
-      UserProfile.email = email;
-      String rawName = email.split('@')[0].replaceAll('.', ' ');
-      UserProfile.name = rawName.isNotEmpty ? rawName[0].toUpperCase() + rawName.substring(1) : '';
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      final fullName = _fullName.text.trim();
-      final phone = _phoneController.text.trim();
-      final dateOfBirth = _dateOfBirthController.text.trim();
+
+    try {
+      final apiService = ApiService();
       
-      // Validation for signup fields
-      if (fullName.isEmpty) {
-        _showError('Please enter your full name.');
-        return;
+      if (isLogin) {
+        // Login with backend
+        final response = await apiService.login(
+          email: email,
+          password: password,
+        );
+        
+        UserProfile.setUserData(response, response['token']);
+        await UserProfile.syncAppliedJobs(); // Sync applied jobs from backend
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        // Signup validation
+        final fullName = _fullName.text.trim();
+        final phone = _phoneController.text.trim();
+        final dateOfBirth = _dateOfBirthController.text.trim();
+        
+        if (fullName.isEmpty) {
+          _showError('Please enter your full name.');
+          return;
+        }
+        if (phone.isEmpty) {
+          _showError('Please enter your phone number.');
+          return;
+        }
+        if (phone.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+          _showError('Phone number should contain exactly 10 digits.');
+          return;
+        }
+        if (dateOfBirth.isEmpty) {
+          _showError('Please select your date of birth.');
+          return;
+        }
+        
+        // Register with backend
+        final response = await apiService.register(
+          email: email,
+          password: password,
+          fullName: fullName,
+          phoneNumber: phone,
+          dob: _formatDateForBackend(dateOfBirth),
+        );
+        
+        UserProfile.setUserData(response, response['token']);
+        Navigator.pushReplacementNamed(context, '/home');
       }
-      if (phone.isEmpty) {
-        _showError('Please enter your phone number.');
-        return;
-      }
-      if (phone.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
-        _showError('Phone number should contain exactly 10 digits.');
-        return;
-      }
-      if (dateOfBirth.isEmpty) {
-        _showError('Please select your date of birth.');
-        return;
-      }
-      
-      setState(() {
-        _createdEmail = email;
-        _createdPassword = password;
-      });
-      
-      // Set user profile info on sign up - complete profile automatically
-      UserProfile.email = email;
-      UserProfile.name = fullName;
-      UserProfile.phone = phone;
-      UserProfile.dateOfBirth = dateOfBirth;
-      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      _showError('Error: ${e.toString()}');
     }
+    
+    _clearFields();
+  }
+
+  String _formatDateForBackend(String dateString) {
+    // Convert "DD/MM/YYYY" to "YYYY-MM-DD"
+    final parts = dateString.split('/');
+    if (parts.length == 3) {
+      return '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
+    }
+    return dateString;
+  }
+
+  void _clearFields() {
     _email.clear();
     _password.clear();
     _fullName.clear();

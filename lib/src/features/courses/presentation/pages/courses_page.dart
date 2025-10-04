@@ -707,7 +707,7 @@ class _CoursesPageState extends State<CoursesPage> {
           
           SizedBox(height: 20),
           
-          // Action Buttons
+          // Action Buttons (only 2 buttons now)
           Row(
             children: [
               Expanded(
@@ -727,7 +727,7 @@ class _CoursesPageState extends State<CoursesPage> {
               ),
               SizedBox(width: 12),
               ElevatedButton.icon(
-                onPressed: () => _enrollInCourse(course),
+                onPressed: () => _redirectToCourse(course),
                 icon: Icon(Icons.play_arrow, size: 16),
                 label: Text(course['isFree'] ? 'Start Free' : 'Enroll Now'),
                 style: ElevatedButton.styleFrom(
@@ -913,7 +913,7 @@ class _CoursesPageState extends State<CoursesPage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _enrollInCourse(course);
+                  _redirectToCourse(course);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: course['isFree'] ? Colors.green : Color(0xFF2563EB),
@@ -931,27 +931,16 @@ class _CoursesPageState extends State<CoursesPage> {
     );
   }
 
-  void _enrollInCourse(Map<String, dynamic> course) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.school, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text('Successfully enrolled in "${course['title']}"!'),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green.shade400,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 16,
-          left: 16,
-          right: 16,
-        ),
-      ),
+  void _redirectToCourse(Map<String, dynamic> course) {
+    // This will be handled by backend - redirect to course page
+    Navigator.pushNamed(
+      context, 
+      '/course-details',
+      arguments: {
+        'courseId': course['title'], // or course['id'] if available
+        'courseName': course['title'],
+        'isFree': course['isFree'],
+      },
     );
   }
 }

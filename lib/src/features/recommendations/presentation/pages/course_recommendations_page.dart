@@ -512,7 +512,7 @@ class _CourseRecommendationsPageState extends State<CourseRecommendationsPage> {
           Container(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => _enrollInCourse(course),
+              onPressed: () => _redirectToCourse(course),
               icon: Icon(Icons.play_arrow, size: 18),
               label: Text(course.isFree ? 'Start Free Course' : 'Enroll Now'),
               style: ElevatedButton.styleFrom(
@@ -530,22 +530,16 @@ class _CourseRecommendationsPageState extends State<CourseRecommendationsPage> {
     );
   }
 
-  void _enrollInCourse(CourseRecommendation course) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.school, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text('Enrolled in "${course.title}" successfully!'),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green.shade400,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+  void _redirectToCourse(CourseRecommendation course) {
+    // This will be handled by backend - redirect to course page
+    Navigator.pushNamed(
+      context, 
+      '/course-details',
+      arguments: {
+        'courseId': course.title, // or course.id if available
+        'courseName': course.title,
+        'isFree': course.isFree,
+      },
     );
   }
 }
