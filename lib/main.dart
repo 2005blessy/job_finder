@@ -10,6 +10,7 @@ import 'src/features/resume/presentation/pages/resume_page.dart';
 import 'src/features/courses/presentation/pages/courses_page.dart';
 import 'src/features/recommendations/presentation/pages/job_recommendations_page.dart';
 import 'src/features/recommendations/presentation/pages/course_recommendations_page.dart';
+import 'src/features/landing/presentation/pages/landing_page.dart';
 
 void main() {
   runApp(const JobFinderApp());
@@ -21,15 +22,23 @@ class JobFinderApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Job Finder",
+      title: "CareerLink",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+<<<<<<< Updated upstream
       initialRoute: '/landing',
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/landing':
+=======
+      initialRoute: '/',
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/':
+>>>>>>> Stashed changes
             return MaterialPageRoute(builder: (context) => const LandingPage());
           case '/login':
+          case '/signup':
             return MaterialPageRoute(builder: (context) => const LoginSignUpPage());
           case '/home':
             return MaterialPageRoute(builder: (context) => const HomePage());
