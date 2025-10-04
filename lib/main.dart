@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'src/core/theme/app_theme.dart';
 import 'src/features/auth/presentation/pages/login_signup_page.dart';
+import 'src/features/landing_page.dart';
 import 'src/features/home/presentation/pages/home_page.dart';
 import 'src/features/jobs/presentation/pages/jobs_page.dart';
 import 'src/features/profile/presentation/pages/profile_page.dart';
@@ -23,9 +24,11 @@ class JobFinderApp extends StatelessWidget {
       title: "Job Finder",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/login',
+      initialRoute: '/landing',
       onGenerateRoute: (settings) {
         switch (settings.name) {
+          case '/landing':
+            return MaterialPageRoute(builder: (context) => const LandingPage());
           case '/login':
             return MaterialPageRoute(builder: (context) => const LoginSignUpPage());
           case '/home':
