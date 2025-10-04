@@ -74,10 +74,15 @@ class _JobsPageState extends State<JobsPage> {
   void _filterJobs() {
     setState(() {
       filteredJobs = jobs.where((job) {
-        final matchesSearch = job['title'].toLowerCase().contains(searchQuery.toLowerCase()) ||
-                            job['company'].toLowerCase().contains(searchQuery.toLowerCase()) ||
-                            job['skills'].any((skill) => skill.toLowerCase().contains(searchQuery.toLowerCase()));
+        final titleMatch = job['title'].toString().toLowerCase().contains(searchQuery.toLowerCase());
+        final companyMatch = job['company'].toString().toLowerCase().contains(searchQuery.toLowerCase());
         
+        // Fix the skills filtering logic
+        final skillsMatch = (job['skills'] as List<dynamic>).any((skill) => 
+          skill.toString().toLowerCase().contains(searchQuery.toLowerCase())
+        );
+        
+        final matchesSearch = titleMatch || companyMatch || skillsMatch;
         final matchesType = selectedJobType == 'All' || job['type'] == selectedJobType;
         
         return matchesSearch && matchesType;
@@ -397,7 +402,7 @@ class _JobsPageState extends State<JobsPage> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: job['skills'].map<Widget>((skill) => Container(
+            children: (job['skills'] as List<dynamic>).map<Widget>((skill) => Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Color(0xFF2563EB).withOpacity(0.1),
@@ -405,7 +410,7 @@ class _JobsPageState extends State<JobsPage> {
                 border: Border.all(color: Color(0xFF2563EB).withOpacity(0.2)),
               ),
               child: Text(
-                skill,
+                skill.toString(),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
@@ -555,7 +560,7 @@ class _JobsPageState extends State<JobsPage> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: job['skills'].map<Widget>((skill) => Container(
+                  children: (job['skills'] as List<dynamic>).map<Widget>((skill) => Container(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Color(0xFF2563EB).withOpacity(0.1),
@@ -563,7 +568,7 @@ class _JobsPageState extends State<JobsPage> {
                       border: Border.all(color: Color(0xFF2563EB).withOpacity(0.2)),
                     ),
                     child: Text(
-                      skill,
+                      skill.toString(),
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/src/shared/user_profile.dart';
 
 class ResumePage extends StatefulWidget {
   const ResumePage({super.key});
@@ -27,6 +28,9 @@ class _ResumePageState extends State<ResumePage> {
         'Git',
         'Problem Solving'
       ];
+      
+      // Update UserProfile with extracted skills
+      UserProfile.setExtractedSkills(extractedSkills);
     });
     
     ScaffoldMessenger.of(context).showSnackBar(
@@ -51,6 +55,9 @@ class _ResumePageState extends State<ResumePage> {
       _hasUploadedFile = false;
       uploadedFileName = '';
       extractedSkills.clear();
+      
+      // Clear UserProfile skills
+      UserProfile.clearSkills();
     });
     
     ScaffoldMessenger.of(context).showSnackBar(
@@ -67,6 +74,21 @@ class _ResumePageState extends State<ResumePage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
+  }
+
+  void _viewRecommendations() {
+    if (extractedSkills.isNotEmpty) {
+      Navigator.pushNamed(context, '/job-recommendations');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please upload your resume first to get recommendations!'),
+          backgroundColor: Colors.orange.shade400,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   @override
@@ -138,7 +160,7 @@ class _ResumePageState extends State<ResumePage> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Upload your PDF resume to extract skills and enhance your profile',
+                            'Upload your PDF resume to extract skills and get personalized job recommendations',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Inter',
@@ -381,6 +403,44 @@ class _ResumePageState extends State<ResumePage> {
                                 ),
                               )).toList(),
                             ),
+                            SizedBox(height: 24),
+                            
+                            // View Recommendations Button
+                            Container(
+                              width: double.infinity,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.green, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.withOpacity(0.2),
+                                    blurRadius: 15,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: _viewRecommendations,
+                                icon: Icon(Icons.auto_awesome, size: 20),
+                                label: Text(
+                                  'View Job Recommendations',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -419,7 +479,7 @@ class _ResumePageState extends State<ResumePage> {
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'Our AI will analyze your resume and automatically extract relevant skills to enhance your job matching.',
+                                  'Our AI will analyze your resume, extract skills, and provide personalized job recommendations with skill gap analysis.',
                                   style: TextStyle(
                                     fontFamily: 'Inter',
                                     fontSize: 14,
