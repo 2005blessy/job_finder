@@ -11,6 +11,7 @@ import 'src/features/recommendations/presentation/pages/job_recommendations_page
 import 'src/features/recommendations/presentation/pages/course_recommendations_page.dart';
 import 'src/features/applied_jobs/presentation/pages/applied_jobs_page.dart';
 import 'src/core/services/api_service.dart';
+import 'src/features/landing/presentation/pages/landing_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,13 +33,16 @@ class JobFinderApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Job Finder",
+      title: "CareerLink",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/login',
+      initialRoute: '/',
       onGenerateRoute: (settings) {
         switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(builder: (context) => const LandingPage());
           case '/login':
+          case '/signup':
             return MaterialPageRoute(builder: (context) => const LoginSignUpPage());
           case '/home':
             return MaterialPageRoute(builder: (context) => const HomePage());

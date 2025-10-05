@@ -1,0 +1,274 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+class LandingPage extends StatefulWidget {
+  const LandingPage({super.key});
+
+  @override
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  Timer? _timer;
+  int _currentIndex = 0;
+  
+  final List<String> _headlines = [
+    'Your gateway to endless career possibilities',
+    'Connect with top employers worldwide',
+    'Discover opportunities that match your skills'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _controller.forward();
+    _startHeadlineTimer();
+  }
+
+  void _startHeadlineTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % _headlines.length;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/login'),
+              child: const Text(
+                'Login',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/signup'),
+              child: const Text(
+                'Sign Up',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 24),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/dreamjob.jpg',
+              fit: BoxFit.cover,
+              colorBlendMode: BlendMode.darken,
+              color: Colors.black.withOpacity(0.5),
+            ),
+          ),
+          
+          // Main Content
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title with scale animation
+                  SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, -0.2),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: _controller,
+                      curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
+                    )),
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: const Text(
+                        'CareerLink',
+                        style: TextStyle(
+                          fontSize: 72,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Animated Headlines
+                  FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SizedBox(
+                      width: 600,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 800),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.2),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          _headlines[_currentIndex],
+                          key: ValueKey<int>(_currentIndex),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            height: 1.5,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  // Get Started Button with slide animation
+                  SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.5),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: _controller,
+                      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+                    )),
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pushNamed(context, '/login'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Get Started',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Footer
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: _controller,
+                curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+              )),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 24,
+                  ),
+                  color: Colors.black.withOpacity(0.7),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '© 2025 CareerLink. All rights reserved.',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.email, color: Colors.white),
+                            label: const Text(
+                              'contact@careerlink.com',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          TextButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.phone, color: Colors.white),
+                            label: const Text(
+                              '+1 (555) 123-4567',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
