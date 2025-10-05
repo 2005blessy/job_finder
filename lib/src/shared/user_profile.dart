@@ -1,4 +1,6 @@
 import 'package:job_finder/src/core/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class UserProfile {
   static String name = '';
@@ -19,8 +21,62 @@ class UserProfile {
   
   static final ApiService _apiService = ApiService();
   
+  // SharedPreferences keys
+  static const String _keyExtractedSkills = 'extracted_skills';
+  static const String _keyTopSkills = 'top_skills';
+  static const String _keyResumeUploaded = 'resume_uploaded';
+  static const String _keyLastUploadDate = 'last_upload_date';
+  static const String _keyUserName = 'user_name';
+  static const String _keyUserEmail = 'user_email';
+  static const String _keyUserPhone = 'user_phone';
+  static const String _keyUserDob = 'user_dob';
+  static const String _keyUserId = 'user_id';
+  
+  // Initialize app - load persisted data
+  static Future<void> init() async {
+    await loadPersistedData();
+  }
+  
+  // Load persisted data from SharedPreferences
+  static Future<void> loadPersistedData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Load user data
+      userId = prefs.getString(_keyUserId) ?? '';
+      name = prefs.getString(_keyUserName) ?? '';
+      email = prefs.getString(_keyUserEmail) ?? '';
+      phone = prefs.getString(_keyUserPhone) ?? '';
+      dateOfBirth = prefs.getString(_keyUserDob) ?? '';
+      
+      // Load resume data
+      resumeUploaded = prefs.getBool(_keyResumeUploaded) ?? false;
+      
+      final skillsJson = prefs.getStringList(_keyExtractedSkills);
+      if (skillsJson != null) {
+        extractedSkills = skillsJson;
+      }
+      
+      final topSkillsJson = prefs.getStringList(_keyTopSkills);
+      if (topSkillsJson != null) {
+        topSkills = topSkillsJson;
+      }
+      
+      final uploadDateStr = prefs.getString(_keyLastUploadDate);
+      if (uploadDateStr != null) {
+        lastResumeUpload = DateTime.parse(uploadDateStr);
+      }
+      
+      hasRecommendations = extractedSkills.isNotEmpty;
+      
+      print('✅ Loaded persisted data: ${extractedSkills.length} skills, resume uploaded: $resumeUploaded');
+    } catch (e) {
+      print('❌ Error loading persisted data: $e');
+    }
+  }
+  
   // Initialize from backend login/register response
-  static void setUserData(Map<String, dynamic> userData, String token) {
+  static Future<void> setUserData(Map<String, dynamic> userData, String token) async {
     final user = userData['user'];
     userId = user['id'] ?? '';
     name = user['full_name'] ?? '';
@@ -29,23 +85,76 @@ class UserProfile {
     dateOfBirth = user['dob'] ?? '';
     
     _apiService.setToken(token);
+    
+    // Persist user data
+    await _persistUserData();
+  }
+  
+  // Persist user data to SharedPreferences
+  static Future<void> _persistUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyUserId, userId);
+      await prefs.setString(_keyUserName, name);
+      await prefs.setString(_keyUserEmail, email);
+      await prefs.setString(_keyUserPhone, phone);
+      await prefs.setString(_keyUserDob, dateOfBirth);
+      
+      print('✅ User data persisted');
+    } catch (e) {
+      print('❌ Error persisting user data: $e');
+    }
   }
   
   // Helper methods for skills
-  static void setExtractedSkills(List<String> skills) {
+  static Future<void> setExtractedSkills(List<String> skills) async {
     extractedSkills = skills;
     topSkills = skills.take(3).toList(); // Get top 3 skills
     hasRecommendations = skills.isNotEmpty;
     lastResumeUpload = DateTime.now();
     resumeUploaded = skills.isNotEmpty;
+    
+    // Persist resume data
+    await _persistResumeData();
   }
   
-  static void clearSkills() {
+  // Persist resume data to SharedPreferences
+  static Future<void> _persistResumeData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_keyExtractedSkills, extractedSkills);
+      await prefs.setStringList(_keyTopSkills, topSkills);
+      await prefs.setBool(_keyResumeUploaded, resumeUploaded);
+      
+      if (lastResumeUpload != null) {
+        await prefs.setString(_keyLastUploadDate, lastResumeUpload!.toIso8601String());
+      }
+      
+      print('✅ Resume data persisted: ${extractedSkills.length} skills');
+    } catch (e) {
+      print('❌ Error persisting resume data: $e');
+    }
+  }
+  
+  static Future<void> clearSkills() async {
     extractedSkills.clear();
     topSkills.clear();
     hasRecommendations = false;
     lastResumeUpload = null;
     resumeUploaded = false;
+    
+    // Clear from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_keyExtractedSkills);
+      await prefs.remove(_keyTopSkills);
+      await prefs.remove(_keyResumeUploaded);
+      await prefs.remove(_keyLastUploadDate);
+      
+      print('✅ Resume data cleared from storage');
+    } catch (e) {
+      print('❌ Error clearing resume data: $e');
+    }
   }
   
   // Applied jobs methods (now with backend sync)
@@ -116,16 +225,25 @@ class UserProfile {
     return filledFields / totalFields;
   }
   
-  // Clear all profile data
-  static void clearProfile() {
+  // Clear all profile data (only on logout)
+  static Future<void> clearProfile() async {
     name = '';
     email = '';
     phone = '';
     dateOfBirth = '';
     userId = '';
     resumeUploaded = false;
-    clearSkills();
+    await clearSkills();
     clearAppliedJobs();
     _apiService.clearToken();
+    
+    // Clear all from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      print('✅ All profile data cleared from storage');
+    } catch (e) {
+      print('❌ Error clearing profile data: $e');
+    }
   }
 }

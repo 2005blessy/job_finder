@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';  // ADD THIS IMPORT
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000'; // Change for production
+  static const String baseUrl = 'http://192.168.1.43:3000'; // Changed from localhost
   String? _token;
 
   // Singleton pattern
@@ -88,7 +89,17 @@ class ApiService {
     final response = await http.get(uri, headers: _headers);
 
     final data = _handleResponse(response);
-    return data['data'] ?? [];
+    return data['jobs'] ?? [];
+  }
+
+  Future<List<dynamic>> getPopularJobSearches() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/jobs/popular'),
+      headers: _headers,
+    );
+
+    final data = _handleResponse(response);
+    return List<Map<String, dynamic>>.from(data['popular_searches'] ?? []);
   }
 
   Future<Map<String, dynamic>> getJobDetails(String jobId) async {
@@ -111,16 +122,16 @@ class ApiService {
 
   Future<List<dynamic>> getJobsByCompany(String company) async {
     final uri = Uri.parse('$baseUrl/jobs/company').replace(
-      queryParameters: {'company': company},
+      queryParameters: {'name': company},
     );
     final response = await http.get(uri, headers: _headers);
 
     final data = _handleResponse(response);
-    return data['data'] ?? [];
+    return data['jobs'] ?? [];
   }
 
   // Job recommendations endpoints
-  Future<List<dynamic>> getJobRecommendations({String? location}) async {
+  Future<dynamic> getJobRecommendations({String? location}) async {
     final params = <String, String>{
       if (location != null) 'location': location,
     };
@@ -128,30 +139,145 @@ class ApiService {
     final uri = Uri.parse('$baseUrl/jobs/recommendations').replace(
       queryParameters: params.isNotEmpty ? params : null,
     );
+    
+    print('🔍 Fetching job recommendations from: $uri');
+    print('🔑 Auth token present: ${_token != null}');
+    
     final response = await http.get(uri, headers: _headers);
-
+    
+    print('📥 Response status: ${response.statusCode}');
+    
+    // Return the full response data (includes jobs, user_skills, top_skills, etc.)
     final data = _handleResponse(response);
-    return data['data'] ?? [];
+    
+    print('✅ Job recommendations response received');
+    print('📊 Response keys: ${data is Map ? (data as Map).keys.toList() : "Not a map"}');
+    
+    return data;  // Changed from: data['jobs'] ?? []
   }
 
-  // Resume upload endpoint
+  // Resume upload endpoint (for mobile/desktop with file path)
   Future<List<String>> uploadResume(File resumeFile) async {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/resume/upload'),
-    );
-    
-    request.headers.addAll({
-      'Authorization': 'Bearer $_token',
-    });
-    
-    request.files.add(await http.MultipartFile.fromPath('file', resumeFile.path));
-    
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
-    
-    final data = _handleResponse(response);
-    return List<String>.from(data['skills'] ?? []);
+    try {
+      print('📤 Starting resume upload...');
+      print('📁 File path: ${resumeFile.path}');
+      print('📄 File exists: ${await resumeFile.exists()}');
+      print('🔑 Token available: ${_token != null ? "Yes" : "No"}');
+      
+      if (_token == null || _token!.isEmpty) {
+        throw ApiException('Not authenticated. Please login first.', 401);
+      }
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/resume/upload'),
+      );
+      
+      request.headers.addAll({
+        'Authorization': 'Bearer $_token',
+      });
+      
+      var multipartFile = await http.MultipartFile.fromPath(
+        'resume',
+        resumeFile.path,
+      );
+      request.files.add(multipartFile);
+      
+      print('📋 Multipart file added: ${multipartFile.filename}, size: ${multipartFile.length} bytes');
+      print('🌐 Uploading to: $baseUrl/resume/upload');
+      
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      print('📥 Response status: ${response.statusCode}');
+      print('📥 Response body: ${response.body}');
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+        final skillsList = List<String>.from(data['extracted_skills'] ?? data['skills'] ?? []);
+        print('✅ Successfully extracted ${skillsList.length} skills: $skillsList');
+        return skillsList;
+      } else {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['error'] ?? errorData['message'] ?? 'Unknown error';
+        print('❌ Upload failed: $errorMessage');
+        throw ApiException(errorMessage, response.statusCode);
+      }
+    } catch (e) {
+      print('❌ Exception during resume upload: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Failed to upload resume: ${e.toString()}', 500);
+    }
+  }
+
+  // Resume upload with bytes (works on web and mobile) - ADD THIS METHOD
+  Future<List<String>> uploadResumeBytes(Uint8List fileBytes, String fileName) async {
+    try {
+      print('📤 Starting resume upload with bytes...');
+      print('📁 File name: $fileName');
+      print('📊 File size: ${fileBytes.length} bytes');
+      print('🔑 Token available: ${_token != null ? "Yes" : "No"}');
+      
+      if (_token == null || _token!.isEmpty) {
+        throw ApiException('Not authenticated. Please login first.', 401);
+      }
+
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/resume/upload'),
+      );
+      
+      request.headers.addAll({
+        'Authorization': 'Bearer $_token',
+      });
+      
+      // Add file from bytes (works on web and mobile)
+      var multipartFile = http.MultipartFile.fromBytes(
+        'resume',  // Backend expects 'resume' field name
+        fileBytes,
+        filename: fileName,
+      );
+      request.files.add(multipartFile);
+      
+      print('📋 Multipart file added: $fileName, size: ${fileBytes.length} bytes');
+      print('🌐 Uploading to: $baseUrl/resume/upload');
+      
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      print('📥 Response status: ${response.statusCode}');
+      print('📥 Response body: ${response.body}');
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+        
+        // Backend returns 'extracted_skills'
+        final skills = data['extracted_skills'];
+        
+        if (skills == null) {
+          print('⚠️  No extracted_skills in response, checking alternatives...');
+          print('📋 Available keys: ${data.keys.toList()}');
+        }
+        
+        final skillsList = List<String>.from(skills ?? data['skills'] ?? []);
+        print('✅ Successfully extracted ${skillsList.length} skills: $skillsList');
+        
+        return skillsList;
+      } else {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['error'] ?? errorData['message'] ?? 'Unknown error';
+        print('❌ Upload failed: $errorMessage');
+        throw ApiException(errorMessage, response.statusCode);
+      }
+    } catch (e) {
+      print('❌ Exception during resume upload: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Failed to upload resume: ${e.toString()}', 500);
+    }
   }
 
   // Job application endpoints
@@ -200,7 +326,7 @@ class ApiService {
     );
 
     if (response.statusCode == 404) {
-      return null; // Job not applied
+      return null;
     }
 
     final data = _handleResponse(response);
@@ -229,7 +355,7 @@ class ApiService {
     _handleResponse(response);
   }
 
-  // Course recommendations endpoint
+  // Course recommendations endpoints
   Future<Map<String, dynamic>> getCourseRecommendations(String jobId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/jobs/$jobId/courses'),
@@ -237,6 +363,40 @@ class ApiService {
     );
 
     return _handleResponse(response);
+  }
+
+  Future<List<dynamic>> getCoursesBySkills(List<String> skills) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/courses/recommendations'),
+      headers: _headers,
+      body: jsonEncode({'skills': skills}),
+    );
+
+    final data = _handleResponse(response);
+    return data['data'] ?? data['courses'] ?? [];
+  }
+
+  Future<List<dynamic>> searchCourses(String query, {String? provider}) async {
+    final params = <String, String>{
+      'query': query,
+      if (provider != null && provider != 'all') 'provider': provider,
+    };
+    
+    final uri = Uri.parse('$baseUrl/courses/search').replace(queryParameters: params);
+    final response = await http.get(uri, headers: _headers);
+
+    final data = _handleResponse(response);
+    return data['courses'] ?? [];
+  }
+
+  Future<List<dynamic>> getPopularCourses() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/courses/popular'),
+      headers: _headers,
+    );
+
+    final data = _handleResponse(response);
+    return data['popular_courses'] ?? [];
   }
 
   // Health check

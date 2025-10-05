@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/src/shared/user_profile.dart';
 import 'package:job_finder/src/core/models/job_recommendation_models.dart';
+import 'package:job_finder/src/core/services/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';  // ADD THIS IMPORT
 
 class JobRecommendationsPage extends StatefulWidget {
   const JobRecommendationsPage({super.key});
@@ -12,6 +14,9 @@ class JobRecommendationsPage extends StatefulWidget {
 class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
   List<JobMatch> recommendedJobs = [];
   bool _isLoading = true;
+  String? _errorMessage;
+  List<String> _userSkills = [];
+  List<String> _topSkills = [];
 
   @override
   void initState() {
@@ -20,86 +25,141 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
   }
 
   Future<void> _loadRecommendations() async {
-    // Simulate API call to backend
-    await Future.delayed(Duration(seconds: 1));
-    
     setState(() {
-      // Simulate recommended jobs based on user's top skills
-      recommendedJobs = _generateMockRecommendations();
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
-  }
 
-  List<JobMatch> _generateMockRecommendations() {
-    // This will be replaced with actual backend API call
-    return [
-      JobMatch(
-        jobId: '1',
-        title: 'Senior Flutter Developer',
-        company: 'TechCorp Solutions',
-        location: 'Remote',
-        salary: '\$90,000 - \$130,000',
-        jobType: 'Full-time',
-        requiredSkills: ['Flutter', 'Dart', 'Firebase', 'REST APIs', 'Git', 'Agile'],
-        description: 'Build cutting-edge mobile applications using Flutter framework with a focus on performance and user experience.',
-        postedDate: '2 days ago',
-        matchPercentage: 85,
-        matchingSkills: ['Flutter', 'Dart', 'Firebase', 'REST APIs', 'Git'],
-        missingSkills: ['Agile'],
-        isRecommended: true,
-      ),
-      JobMatch(
-        jobId: '2',
-        title: 'Mobile App Developer',
-        company: 'StartupXYZ',
-        location: 'San Francisco, CA',
-        salary: '\$80,000 - \$120,000',
-        jobType: 'Full-time',
-        requiredSkills: ['Flutter', 'React Native', 'JavaScript', 'Mobile Development', 'UI/UX Design'],
-        description: 'Develop cross-platform mobile applications and collaborate with design team for optimal user experience.',
-        postedDate: '1 day ago',
-        matchPercentage: 75,
-        matchingSkills: ['Flutter', 'Mobile Development', 'UI/UX Design'],
-        missingSkills: ['React Native', 'JavaScript'],
-        isRecommended: true,
-      ),
-      JobMatch(
-        jobId: '3',
-        title: 'Frontend Developer',
-        company: 'Digital Agency',
-        location: 'New York, NY',
-        salary: '\$70,000 - \$100,000',
-        jobType: 'Full-time',
-        requiredSkills: ['JavaScript', 'React', 'TypeScript', 'UI/UX Design', 'CSS'],
-        description: 'Create responsive web applications and work closely with designers to implement pixel-perfect interfaces.',
-        postedDate: '3 days ago',
-        matchPercentage: 60,
-        matchingSkills: ['UI/UX Design'],
-        missingSkills: ['JavaScript', 'React', 'TypeScript', 'CSS'],
-        isRecommended: true,
-      ),
-      JobMatch(
-        jobId: '4',
-        title: 'Mobile UI/UX Designer',
-        company: 'Design Studio',
-        location: 'Remote',
-        salary: '\$75,000 - \$110,000',
-        jobType: 'Contract',
-        requiredSkills: ['UI/UX Design', 'Figma', 'Adobe XD', 'Mobile Development', 'Prototyping'],
-        description: 'Design intuitive mobile interfaces and create prototypes for mobile applications.',
-        postedDate: '1 week ago',
-        matchPercentage: 70,
-        matchingSkills: ['UI/UX Design', 'Mobile Development'],
-        missingSkills: ['Figma', 'Adobe XD', 'Prototyping'],
-        isRecommended: true,
-      ),
-    ];
+    try {
+      print('🎯 Loading job recommendations from backend...');
+
+      // Call backend API
+      final response = await ApiService().getJobRecommendations();
+
+      print('✅ Received response from backend');
+      print('📦 Response type: ${response.runtimeType}');
+      print('📊 Response data: $response');
+
+      // Backend returns: { jobs: [...], user_skills: [...], top_skills: [...], ... }
+      List<dynamic> jobs;
+
+      if (response is Map<String, dynamic>) {
+        // Extract jobs array from response
+        jobs = response['jobs'] ?? [];
+        _userSkills = List<String>.from(response['user_skills'] ?? []);
+        _topSkills = List<String>.from(response['top_skills'] ?? []);
+
+        print('👤 User has ${_userSkills.length} total skills');
+        print('⭐ Top skills: $_topSkills');
+        print('💼 Found ${jobs.length} job recommendations');
+      } else if (response is List) {
+        // Fallback if response is directly a list
+        jobs = response;
+        _userSkills = UserProfile.extractedSkills;
+        _topSkills = UserProfile.topSkills;
+      } else {
+        throw Exception('Unexpected response format: ${response.runtimeType}');
+      }
+
+      setState(() {
+        recommendedJobs = jobs
+            .map<JobMatch>((e) => JobMatch.fromJson(e as Map<String, dynamic>))
+            .toList();
+        _isLoading = false;
+      });
+
+      print('✨ Successfully loaded ${recommendedJobs.length} job recommendations');
+    } catch (e) {
+      print('❌ Error loading job recommendations: $e');
+
+      setState(() {
+        recommendedJobs = [];
+        _isLoading = false;
+
+        // Provide user-friendly error messages
+        if (e.toString().contains('401') || e.toString().contains('User ID not found')) {
+          _errorMessage = 'Please login to view job recommendations.';
+        } else if (e.toString().contains('No skills found')) {
+          _errorMessage = 'Please upload your resume first to get personalized job recommendations.';
+        } else if (e.toString().contains('RAPIDAPI_KEY')) {
+          _errorMessage = 'Job search service is temporarily unavailable. Please contact support.';
+        } else {
+          _errorMessage = 'Failed to load recommendations. Please try again later.';
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Error Loading Recommendations'),
+                  ],
+                ),
+                SizedBox(height: 4),
+                Text(_errorMessage ?? e.toString()),
+              ],
+            ),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadRecommendations,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Color _getMatchColor(int percentage) {
     if (percentage >= 80) return Colors.green;
     if (percentage >= 60) return Colors.orange;
     return Colors.red;
+  }
+
+  // Add this method to launch URL
+  Future<void> _launchJobUrl(String? url) async {
+    if (url == null || url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No application link available for this job'),
+          backgroundColor: Colors.orange.shade400,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final Uri uri = Uri.parse(url);
+      
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,  // Opens in browser
+        );
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open application link: ${e.toString()}'),
+            backgroundColor: Colors.red.shade400,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -119,6 +179,11 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: _loadRecommendations,
+            tooltip: 'Refresh recommendations',
+          ),
           IconButton(
             icon: Icon(Icons.home),
             onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
@@ -142,87 +207,226 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
                       color: Colors.grey.shade600,
                     ),
                   ),
+                  SizedBox(height: 8),
+                  Text(
+                    'This may take a few moments',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
                 ],
               ),
             )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                bool isMobile = constraints.maxWidth < 600;
-                
-                return Column(
-                  children: [
-                    // Header Section
-                    Container(
-                      padding: EdgeInsets.all(isMobile ? 16 : 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
+          : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red.shade400,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Oops!',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 24),
-                              SizedBox(width: 8),
-                              Text(
-                                'Personalized for You',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_errorMessage!.contains('resume')) ...[
+                              ElevatedButton.icon(
+                                onPressed: () => Navigator.pushNamed(context, '/resume'),
+                                icon: Icon(Icons.upload_file),
+                                label: Text('Upload Resume'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF2563EB),
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
+                              ),
+                              SizedBox(width: 12),
+                            ],
+                            OutlinedButton.icon(
+                              onPressed: _loadRecommendations,
+                              icon: Icon(Icons.refresh),
+                              label: Text('Try Again'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Color(0xFF2563EB),
+                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                side: BorderSide(color: Color(0xFF2563EB)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool isMobile = constraints.maxWidth < 600;
+
+                    return Column(
+                      children: [
+                        // Header Section with updated skills display
+                        Container(
+                          padding: EdgeInsets.all(isMobile ? 16 : 24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
                               ),
                             ],
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Based on your top skills: ${UserProfile.topSkills.join(", ")}',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildLegendItem(Colors.green, '80%+ Match'),
-                              SizedBox(width: 16),
-                              _buildLegendItem(Colors.orange, '60-79% Match'),
-                              SizedBox(width: 16),
-                              _buildLegendItem(Colors.red, 'Below 60%'),
+                              Row(
+                                children: [
+                                  Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 24),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Personalized for You',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF2563EB).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '${recommendedJobs.length} Jobs',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2563EB),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Based on your top skills: ${_topSkills.isNotEmpty ? _topSkills.join(", ") : UserProfile.topSkills.join(", ")}',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              if (_userSkills.isNotEmpty) ...[
+                                SizedBox(height: 4),
+                                Text(
+                                  'Total skills in your profile: ${_userSkills.length}',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                              SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  _buildLegendItem(Colors.green, '80%+ Match'),
+                                  SizedBox(width: 16),
+                                  _buildLegendItem(Colors.orange, '60-79% Match'),
+                                  SizedBox(width: 16),
+                                  _buildLegendItem(Colors.red, 'Below 60%'),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    
-                    // Jobs List
-                    Expanded(
-                      child: ListView.builder(
-                        padding: EdgeInsets.all(isMobile ? 16 : 24),
-                        itemCount: recommendedJobs.length,
-                        itemBuilder: (context, index) {
-                          final job = recommendedJobs[index];
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 16),
-                            child: _buildJobRecommendationCard(job, isMobile),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                        ),
+
+                        // Jobs List
+                        Expanded(
+                          child: recommendedJobs.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.work_off,
+                                        size: 64,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'No job recommendations available.',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 16,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Try uploading your resume or updating your skills.',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 14,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  padding: EdgeInsets.all(isMobile ? 16 : 24),
+                                  itemCount: recommendedJobs.length,
+                                  itemBuilder: (context, index) {
+                                    final job = recommendedJobs[index];
+                                    return Padding(
+                                      padding: EdgeInsets.only(bottom: 16),
+                                      child: _buildJobRecommendationCard(job, isMobile),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
     );
   }
 
@@ -253,7 +457,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
 
   Widget _buildJobRecommendationCard(JobMatch job, bool isMobile) {
     Color matchColor = _getMatchColor(job.matchPercentage);
-    
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 20 : 24),
       decoration: BoxDecoration(
@@ -290,7 +494,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      '${job.company} • ${job.location}',
+                      '${job.company} \u2022 ${job.location}',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14,
@@ -326,9 +530,9 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
               ),
             ],
           ),
-          
+
           SizedBox(height: 12),
-          
+
           // Salary and Posted Date
           Row(
             children: [
@@ -356,9 +560,9 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
               ),
             ],
           ),
-          
+
           SizedBox(height: 12),
-          
+
           // Description
           Text(
             job.description,
@@ -371,9 +575,9 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          
+
           SizedBox(height: 16),
-          
+
           // Matching Skills
           if (job.matchingSkills.isNotEmpty) ...[
             Text(
@@ -409,7 +613,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
             ),
             SizedBox(height: 12),
           ],
-          
+
           // Missing Skills
           if (job.missingSkills.isNotEmpty) ...[
             Row(
@@ -469,7 +673,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
             ),
             SizedBox(height: 16),
           ],
-          
+
           // Action Buttons
           Row(
             children: [
@@ -624,12 +828,12 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
                     return Container(
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isMatching 
+                        color: isMatching
                             ? Colors.green.withOpacity(0.1)
                             : Colors.orange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isMatching 
+                          color: isMatching
                               ? Colors.green.withOpacity(0.3)
                               : Colors.orange.withOpacity(0.3),
                         ),
@@ -685,7 +889,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
                   Navigator.of(context).pop();
                   _markAsApplied(job);
                 },
-                icon: Icon(Icons.check_circle_outline, size: 18),
+                icon: Icon(Icons.bookmark, size: 18),
                 label: Text('Mark as Applied'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -697,11 +901,13 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
               ),
               SizedBox(width: 8),
             ],
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).pop();
                 _redirectToJobApplication(job);
               },
+              icon: Icon(Icons.open_in_new, size: 18),
+              label: Text(UserProfile.hasAppliedToJob(_jobMatchToMap(job)) ? 'View Application' : 'Apply Now'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: UserProfile.hasAppliedToJob(_jobMatchToMap(job)) ? Colors.grey : Color(0xFF2563EB),
                 foregroundColor: Colors.white,
@@ -709,7 +915,6 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(UserProfile.hasAppliedToJob(_jobMatchToMap(job)) ? 'Already Applied' : 'Apply Now'),
             ),
           ],
         );
@@ -719,7 +924,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
 
   void _showCourseRecommendations(List<String> missingSkills) {
     Navigator.pushNamed(
-      context, 
+      context,
       '/course-recommendations',
       arguments: missingSkills,
     );
@@ -745,7 +950,7 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
   void _markAsApplied(JobMatch job) {
     UserProfile.addAppliedJob(_jobMatchToMap(job));
     setState(() {}); // Refresh the UI to show updated status
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -767,23 +972,58 @@ class _JobRecommendationsPageState extends State<JobRecommendationsPage> {
       'title': job.title,
       'company': job.company,
       'location': job.location,
-      'type': job.jobType,  // Changed from job.type to job.jobType
+      'type': job.jobType,
       'salary': job.salary,
       'matchPercentage': job.matchPercentage,
     };
   }
 
-  void _redirectToJobApplication(JobMatch job) {
-    // This will be handled by backend - redirect to job application page
-    Navigator.pushNamed(
-      context, 
-      '/job-application',
-      arguments: {
-        'jobId': job.title, // or job.id if available
-        'jobTitle': job.title,
-        'company': job.company,
-        'matchPercentage': job.matchPercentage,
-      },
-    );
+  void _redirectToJobApplication(JobMatch job) async {
+    // Convert JobMatch to Map for backend compatibility
+    final jobMap = {
+      'job_id': job.jobId,
+      'job_title': job.title,
+      'employer_name': job.company,
+      'job_city': job.location,
+      'job_employment_type': job.jobType,
+      'apply_link': job.applyLink,
+    };
+
+    // Mark as applied in backend
+    try {
+      await UserProfile.addAppliedJob(jobMap);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text('Job marked as applied! Opening application link...')),
+              ],
+            ),
+            backgroundColor: Colors.green.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error marking job as applied: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to mark job as applied: ${e.toString()}'),
+            backgroundColor: Colors.orange.shade400,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+    
+    // Launch the application URL
+      await _launchJobUrl(job.applyLink);
+    }
   }
-}
