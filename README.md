@@ -144,39 +144,6 @@ dependencies:
 
 ---
 
-## 📸 Screenshots
-
-### Landing Page
-<img src="assets/screenshots/landing.png" width="800" alt="Landing Page">
-
-*Professional animated landing page with gradient hero section*
-
-### Job Search & Discovery
-<div style="display: flex; gap: 10px;">
-  <img src="assets/screenshots/jobs.png" width="250" alt="Job Search">
-  <img src="assets/screenshots/job_details.png" width="250" alt="Job Details">
-  <img src="assets/screenshots/recommendations.png" width="250" alt="Recommendations">
-</div>
-
-*Search jobs, view details, and get personalized recommendations*
-
-### Application Tracking
-<img src="assets/screenshots/applications.png" width="250" alt="Application Tracking">
-
-*Track and manage all your job applications*
-
-### Resume Upload
-<img src="assets/screenshots/resume.png" width="250" alt="Resume Upload">
-
-*AI-powered resume analysis and skill extraction*
-
-### Course Discovery
-<img src="assets/screenshots/courses.png" width="250" alt="Courses">
-
-*Find courses to learn missing skills*
-
----
-
 ## 🚀 Getting Started
 
 ### Prerequisites
